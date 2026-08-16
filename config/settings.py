@@ -119,13 +119,21 @@ CLOUDINARY_STORAGE = {
 
 # --- File storage backends ---
 # NOTE: Django 4.2 deprecated the old-style DEFAULT_FILE_STORAGE /
-# STATICFILES_STORAGE settings in favor of this STORAGES dict, and support
-# for the old-style settings was REMOVED entirely in Django 5.1. This
-# project runs Django 6.1, so DEFAULT_FILE_STORAGE = "..." is silently
-# ignored — Django falls back to local FileSystemStorage, which is why
-# uploads were showing up as http://<host>/media/... instead of going to
-# Cloudinary. STORAGES is the setting that's actually read now.
+# STATICFILES_STORAGE settings in favor of the STORAGES dict below, and
+# Django itself stopped reading the old-style settings as of 5.1 (this
+# project runs 6.1) — STORAGES is what Django's own storage machinery
+# actually uses now.
 #
+# HOWEVER: django-cloudinary-storage's own `collectstatic` management
+# command override reads `settings.STATICFILES_STORAGE` directly (it
+# hasn't been updated for the Django 5.1+ removal), so that attribute
+# has to keep existing as a plain setting or collectstatic crashes with
+# AttributeError. Django itself ignores it — it's kept purely for that
+# third-party package's benefit. Same story for DEFAULT_FILE_STORAGE,
+# kept for any other cloudinary_storage internals that still check it.
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
 # Images (thumbnails, gallery shots, tool icons) get Cloudinary's image
 # pipeline (auto-optimized/resized on delivery) via MediaCloudinaryStorage.
 # GLB files aren't an image format Cloudinary transforms, so
