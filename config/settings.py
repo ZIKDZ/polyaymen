@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -53,7 +54,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "frontend" / "dist"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -98,8 +99,12 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+# --- Static files (served via WhiteNoise; frontend build output) ---
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "frontend" / "dist"]
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+WHITENOISE_ROOT = BASE_DIR / "frontend" / "dist"
 
 # --- Media (project thumbnails, gallery images, GLB 3D model files) ---
 MEDIA_URL = "media/"

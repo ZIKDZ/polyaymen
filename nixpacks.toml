@@ -1,0 +1,18 @@
+[phases.setup]
+nixPkgs = ["python312", "nodejs_20"]
+
+[phases.install]
+commands = [
+  "python -m venv /opt/venv",
+  ". /opt/venv/bin/activate && pip install -r requirements.txt",
+  "cd frontend && npm ci"
+]
+
+[phases.build]
+commands = [
+  "cd frontend && npm run build",
+  ". /opt/venv/bin/activate && python manage.py collectstatic --noinput --clear"
+]
+
+[start]
+cmd = "/opt/venv/bin/gunicorn config.wsgi:application --workers 2 --threads 2 --bind 0.0.0.0:$PORT"
