@@ -1,11 +1,15 @@
 [phases.setup]
-nixPkgs = ["python312", "nodejs_20"]
+# nodejs_20 in nixpkgs is 20.18.x — BELOW the ^20.19.0 || >=22.12.0 that
+# Vite 7+/rolldown require. Must be 22.
+nixPkgs = ["python312", "nodejs_22"]
 
 [phases.install]
 commands = [
   "python -m venv /opt/venv",
   ". /opt/venv/bin/activate && pip install -r requirements.txt",
-  "cd frontend && rm -rf node_modules package-lock.json && npm install --no-audit --no-fund"
+  # Do NOT rm package-lock.json. The lockfile is what tells npm which
+  # platform-specific optional binding to install.
+  "cd frontend && npm ci --include=optional --no-audit --no-fund"
 ]
 
 [phases.build]
@@ -15,4 +19,4 @@ commands = [
 ]
 
 [start]
-cmd = "/opt/venv/bin/gunicorn config.wsgi:application --workers 2 --threads 2 --bind 0.0.0.0:$PORT"
+cmd = "/opt/venv/bin/python manage.py migrate --noinput && /opt/venv/bin/gunicorn config.wsgi:application --workers 2 --threads 4 --timeout 60 --bind 0.0.0.0:$PORT --access-logfile -"
