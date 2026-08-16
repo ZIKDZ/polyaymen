@@ -7,11 +7,7 @@ nixPkgs = ["python312", "nodejs_22"]
 commands = [
   "python -m venv /opt/venv",
   ". /opt/venv/bin/activate && pip install -r requirements.txt",
-  # npm ci can fail to pull the correct platform-specific optional binary
-  # for rolldown (npm/cli#4828). Deleting node_modules + the lockfile and
-  # doing a fresh npm install forces npm to re-resolve optional deps
-  # against Railway's actual container platform (linux-x64-gnu).
-  "cd frontend && rm -rf node_modules package-lock.json && npm install --include=optional --no-audit --no-fund"
+  "cd frontend && npm ci --no-audit --no-fund"
 ]
 
 [phases.build]
