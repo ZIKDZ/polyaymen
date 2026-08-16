@@ -103,7 +103,6 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "frontend" / "dist"]
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 WHITENOISE_ROOT = BASE_DIR / "frontend" / "dist"
 
 # --- Media (project thumbnails, gallery images, GLB 3D model files) ---
@@ -117,12 +116,30 @@ CLOUDINARY_STORAGE = {
     "API_KEY": config("CLOUDINARY_API_KEY", default=""),
     "API_SECRET": config("CLOUDINARY_API_SECRET", default=""),
 }
+
+# --- File storage backends ---
+# NOTE: Django 4.2 deprecated the old-style DEFAULT_FILE_STORAGE /
+# STATICFILES_STORAGE settings in favor of this STORAGES dict, and support
+# for the old-style settings was REMOVED entirely in Django 5.1. This
+# project runs Django 6.1, so DEFAULT_FILE_STORAGE = "..." is silently
+# ignored — Django falls back to local FileSystemStorage, which is why
+# uploads were showing up as http://<host>/media/... instead of going to
+# Cloudinary. STORAGES is the setting that's actually read now.
+#
 # Images (thumbnails, gallery shots, tool icons) get Cloudinary's image
-# pipeline (auto-optimized/resized on delivery). GLB files aren't an image
-# format Cloudinary transforms, so Project.glb_file explicitly overrides this
-# with RawMediaCloudinaryStorage (see apps/portfolio/models.py) to just get
-# CDN delivery with no transformation attempted.
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+# pipeline (auto-optimized/resized on delivery) via MediaCloudinaryStorage.
+# GLB files aren't an image format Cloudinary transforms, so
+# Project.glb_file explicitly overrides this with R2Storage (see
+# config/storages.py / apps/portfolio/models.py) to just get CDN delivery
+# with no transformation attempted.
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # Bump this if artists upload dense/uncompressed GLBs. Encourage Draco/Meshopt
 # compression client-side or via a post-upload processing step instead of
