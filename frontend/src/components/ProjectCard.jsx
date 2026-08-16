@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import ModelViewer, { preloadModel } from "./ModelViewer";
+import ModelErrorBoundary from "./ModelErrorBoundary";
 
 export default function ProjectCard({ project }) {
   const [hovered, setHovered] = useState(false);
@@ -20,11 +21,13 @@ export default function ProjectCard({ project }) {
         <img className="project-card-thumb" src={project.thumbnail} alt={project.title} loading="lazy" />
         {project.has_3d_model && hovered && (
           <div className="project-card-3d">
-            <ModelViewer
-              glbUrl={project.glb_file}
-              interactive={false}
-              autoRotate
-            />
+            <ModelErrorBoundary>
+              <ModelViewer
+                glbUrl={project.glb_file}
+                interactive={false}
+                autoRotate
+              />
+            </ModelErrorBoundary>
           </div>
         )}
       </div>

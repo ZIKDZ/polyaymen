@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import ModelViewer from "../components/ModelViewer";
 import { getProject } from "../api/client";
+import ModelErrorBoundary from "../components/ModelErrorBoundary";
 
 export default function ProjectDetail() {
   const { slug } = useParams();
@@ -41,7 +42,9 @@ export default function ProjectDetail() {
 
       {project.glb_file ? (
         <div className="project-detail-stage">
-          <ModelViewer glbUrl={project.glb_file} interactive autoRotate={false} />
+          <ModelErrorBoundary>
+            <ModelViewer glbUrl={project.glb_file} interactive autoRotate={false} />
+          </ModelErrorBoundary>
         </div>
       ) : project.gallery?.length > 0 ? (
         <div className="gallery-strip" style={{ marginTop: "2rem" }}>

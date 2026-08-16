@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ModelViewer from "../components/ModelViewer";
+import ModelErrorBoundary from "../components/ModelErrorBoundary";
 import ProjectCard from "../components/ProjectCard";
 import { getProjects } from "../api/client";
 
@@ -9,7 +10,18 @@ export default function Home() {
 
   useEffect(() => {
     getProjects()
-      .then(({ data }) => setProjects(data.results ?? data))
+      .then(({ data }) => {
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.results)
+          ? data.results
+          : [];
+        setProjects(list);
+      })
+      .catch((err) => {
+        console.error("Failed to load projects:", err);
+        setProjects([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -26,7 +38,9 @@ export default function Home() {
         </div>
         <div className="hero-stage">
           {featured && (
-            <ModelViewer glbUrl={featured.glb_file} interactive autoRotate />
+            <ModelErrorBoundary>
+              <ModelViewer glbUrl={featured.glb_file} interactive autoRotate />
+            </ModelErrorBoundary>
           )}
         </div>
       </section>

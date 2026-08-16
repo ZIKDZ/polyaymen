@@ -12,19 +12,32 @@ from decouple import config
 from storages.backends.s3boto3 import S3Boto3Storage
 
 
+def _bare_host(value):
+    """
+    django-storages prepends 'https://' to custom_domain itself, so the env
+    var must be a bare host (no scheme). If someone sets
+    R2_PUBLIC_DOMAIN=https://pub-xxxx.r2.dev instead of pub-xxxx.r2.dev,
+    this strips the scheme so we don't end up with 'https://https://...'
+    in every generated file URL.
+    """
+    if not value:
+        return None
+    return value.split("://", 1)[-1].rstrip("/")
+
+
 class R2Storage(S3Boto3Storage):
     bucket_name = config("R2_BUCKET_NAME", default="")
-    endpoint_url = config("R2_ENDPOINT_URL", default="")  # https://<account-id>.r2.cloudflarestorage.com
+    endpoint_url = config("R2_ENDPOINT_URL", default="")
     access_key = config("R2_ACCESS_KEY_ID", default="")
     secret_key = config("R2_SECRET_ACCESS_KEY", default="")
     region_name = "auto"
     default_acl = None
-    querystring_auth = False  # public URLs, not signed — bucket must have public access enabled
+    querystring_auth = False
     file_overwrite = False
     addressing_style = "virtual"
 
-    # Optional: set R2_PUBLIC_DOMAIN in .env once you've enabled public access
-    # (either R2's own r2.dev domain or a custom domain connected in the
-    # Cloudflare dashboard). Falls back to the default S3-style URL if unset,
-    # which won't actually be publicly reachable until you configure one.
-    custom_domain = config("R2_PUBLIC_DOMAIN", default=None) or None
+    # Prefix under which files are actually stored in the bucket, e.g. "polyaymen".
+    # Without this, generated URLs point at the bucket root and 404.
+    location = config("R2_LOCATION", default="")
+
+    custom_domain = _bare_host(config("R2_PUBLIC_DOMAIN", default=None))
