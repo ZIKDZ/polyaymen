@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getProfile } from "../api/client";
+import AboutArt from "../components/AboutArt";
 
 export default function About() {
   const [profile, setProfile] = useState(null);
@@ -11,14 +12,12 @@ export default function About() {
   if (!profile) return null;
 
   return (
-    <div className="container" style={{ padding: "3rem 0 5rem" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 320px) 1fr", gap: "3rem" }}>
-        {profile.avatar && (
-          <img
-            src={profile.avatar}
-            alt={profile.name}
-            style={{ width: "100%", borderRadius: "var(--radius-md)", aspectRatio: "4/5", objectFit: "cover" }}
-          />
+    <div className="container" style={{ paddingTop: "3rem", paddingBottom: "5rem" }}>
+      <div className="about-grid">
+        {profile.avatar ? (
+          <img className="about-avatar" src={profile.avatar} alt={profile.name} />
+        ) : (
+          <AboutArt />
         )}
         <div>
           <span className="eyebrow">About</span>
@@ -38,11 +37,7 @@ export default function About() {
                 <span
                   key={s.id}
                   className="eyebrow"
-                  style={{
-                    padding: "0.5rem 0.9rem",
-                    border: "1px solid var(--color-hairline)",
-                    borderRadius: "100px",
-                  }}
+                  style={{ padding: "0.5rem 0.9rem", border: "1px solid var(--color-hairline)", borderRadius: "100px" }}
                 >
                   {s.name}
                 </span>
