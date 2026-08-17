@@ -35,9 +35,35 @@ function Model({ url, autoRotate }) {
     });
   }, [scene]);
 
+  // IMPORTANT: <Center> must be INSIDE the rotating group, not outside it.
+  // Some artist-exported GLBs bake a large translation into their root
+  // node (the mesh sits far from the file's own local origin — e.g. one
+  // real export had a mesh ~3 units across sitting ~13 units away from
+  // its node's local (0,0,0)). If we rotate first and center second, the
+  // rotation pivots around that raw node origin — which can be nowhere
+  // near the visible geometry — so the model appears to orbit around a
+  // "hidden anchor" instead of spinning in place. It can also sweep
+  // through the camera's near/far clip planes (set once by
+  // <Bounds fit clip> from a static snapshot), which shows up as
+  // flicker as the mesh clips in and out. Centering first means the
+  // group's own local origin (the thing `ref` rotates) IS the mesh's
+  // actual visual center, regardless of whatever offset is baked into
+  // the file, and it stays inside the bounds Bounds fit the camera to.
+  // `bottom` keeps X/Z horizontally centered (so the rotation above still
+  // pivots through the model's actual middle) but aligns the bounding
+  // box's LOWEST point to y=0 instead of the box's vertical center.
+  // Without this, <Center> puts the model's geometric center at y=0,
+  // which for a tall/asymmetric mesh (e.g. a headband arching well above
+  // its earcups) leaves the earcups hanging below y=0 — right where the
+  // <ContactShadows> plane sits. The shadow then intersects the earcup
+  // geometry instead of sitting beneath it, which reads as a duplicate/
+  // ghosted shadow. Grounding the model's bottom at y=0 makes it actually
+  // rest on the shadow catcher instead of poking through it.
   return (
     <group ref={ref}>
-      <primitive object={scene} />
+      <Center bottom>
+        <primitive object={scene} />
+      </Center>
     </group>
   );
 }
@@ -85,9 +111,7 @@ export default function ModelViewer({
         <Suspense fallback={null}>
           <Environment preset="studio" />
           <Bounds fit clip observe margin={1.3}>
-            <Center>
-              <Model url={glbUrl} autoRotate={autoRotate} />
-            </Center>
+            <Model url={glbUrl} autoRotate={autoRotate} />
           </Bounds>
           <ContactShadows
             position={[0, -0.01, 0]}
@@ -101,6 +125,7 @@ export default function ModelViewer({
         {interactive && (
           <OrbitControls
             enablePan={false}
+            enableZoom={false}
             minDistance={1.5}
             maxDistance={9}
             autoRotate={false}
